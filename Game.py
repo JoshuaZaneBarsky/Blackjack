@@ -14,6 +14,7 @@
 from Hand import Hand
 from Deck import Deck
 from Card import Card
+from tkinter import Label
 
 class Game():
     # initializes the hands and points
@@ -31,28 +32,25 @@ class Game():
         canvas.update()
 
     def playerTurn(self, canvas, deck):
+        currentTurn = 'player'
         if(len(deck) > 0):
-            bust = False
-            x = ''
-            while  x != 's' and not bust:
-                x = input('Type \'h\' for hit, or \'s\' for stay.')
-                if x == 'h':
-                    self.dealCard('user', canvas, deck)
-                self.updatePlayingField(canvas, deck)
-                if(self.getUserSum() > 21):
-                        bust = True
-            return bust
-        return False
+            self.dealCard('user', canvas, deck)
+            self.updatePlayingField(canvas, deck)
+        if(self.getUserSum() >= 21): # player is done
+            currentTurn = 'computer'
+        return currentTurn
         
 
     def computerTurn(self, canvas, deck):
+        currentTurn = 'computer'
         self.computerHand.getHand()[0].flipCard()
         self.updatePlayingField(canvas, deck)
- 
         while self.getComputerSum() < 17:
             self.dealCard('computer', canvas, deck)
             self.updatePlayingField(canvas, deck)
-        pass
+        if self.getComputerSum() >= 21: # computer is done
+            currentTurn = 'player'
+        return currentTurn
 
     def getUserSum(self):
         userSum = 0
@@ -102,7 +100,7 @@ class Game():
             print("(No points awarded - it was a tie)")
         elif userSum > 21:
             if computerSum > 21:
-                roundWinner = None
+                roundWinner = 'No one'
                 print("Both user and computer bust.")
             else:
                 print("(user busts)")
@@ -130,13 +128,12 @@ class Game():
         card = deck.pop()
         if showFront and card.back:
             card.flipCard()
-        self.updatePlayingField(canvas, deck)
         if player == 'user':
             self.userHand.hand.append(card)
         else:
             self.computerHand.hand.append(card)
-
         self.updatePlayingField(canvas, deck)
+        #canvas.update_idletasks()  # Force update of the canvas
 
 
     #printing cards to canvas
@@ -144,14 +141,27 @@ class Game():
         #print computer hand
         for i in range(len(c)):
             POS = [100+20*i,50]
-            canvas.create_image(POS[0],POS[1],image=c[i].card_photo, anchor='nw')
+            #canvas.create_image(POS[0],POS[1],image=c[i].card_photo, anchor='nw')
+            label = Label(canvas, image=c[i].card_photo, borderwidth=0, bg=canvas.cget('bg'), text = c[i].suit + c[i].rank)
+            label.place(x=POS[0], y=POS[1])
         
         #print deck
         for i in range(len(d)):
             POS = [100+13*i,270]
-            canvas.create_image(POS[0],POS[1],image=d[i].card_photo, anchor='nw')
+            #canvas.create_image(POS[0],POS[1],image=d[i].card_photo, anchor='nw')
+            label = Label(canvas, image=d[i].card_photo, borderwidth=0, bg=canvas.cget('bg'), text = d[i].suit + d[i].rank)
+            label.place(x=POS[0], y=POS[1])
 
         #print user hand
         for i in range(len(u)):
             POS = [100+20*i,500]
-            canvas.create_image(POS[0],POS[1],image=u[i].card_photo, anchor='nw')
+            #canvas.create_image(POS[0],POS[1],image=u[i].card_photo, anchor='nw')
+            label = Label(canvas, image=u[i].card_photo, borderwidth=0, bg=canvas.cget('bg'), text = u[i].suit + u[i].rank)
+            label.place(x=POS[0], y=POS[1])
+
+    def printPoints(self, canvas):
+        canvas.create_text(750, 730, font='Times 40',
+            text = 'Your Score: ' + str(self.userPoints))
+        canvas.create_text(750,50, font='Times 40',
+            text = 'Computer Score: ' + str(self.computerPoints))
+        canvas.update()
